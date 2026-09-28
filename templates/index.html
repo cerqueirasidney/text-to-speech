@@ -435,7 +435,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>️ Texto para Fala</h1>
+            <h1>🎙️ Texto para Fala</h1>
             <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
         </div>
         
@@ -444,7 +444,7 @@
                 <label for="texto">Digite seu texto:</label>
                 <textarea id="texto" name="texto" placeholder="Digite o texto que você quer converter em áudio..." required></textarea>
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" id="limparBtn">️ Limpar</button>
+                    <button type="button" class="btn-secondary" id="limparBtn">🗑️ Limpar</button>
                     <button type="button" class="btn-secondary" id="exemploBtn">📝 Exemplo</button>
                 </div>
             </div>
@@ -452,26 +452,17 @@
             <div class="form-group">
                 <label for="voz">Selecione a voz:</label>
                 <select id="voz" name="voz" required>
-                    <optgroup label="Português (Brasil)">
+                    <optgroup label="🇧🇷 Português (Brasil)">
                         <optgroup label="Masculinas">
                             <option value="pt-BR-AntonioNeural">Antonio (Maduro, Natural)</option>
-                            <option value="pt-BR-DonatoNeural">Donato (Jovem)</option>
-                            <option value="pt-BR-HumbertoNeural">Humberto</option>
-                            <option value="pt-BR-JulioNeural">Julio</option>
-                            <option value="pt-BR-NicolauNeural">Nicolau</option>
                         </optgroup>
                         <optgroup label="Femininas">
                             <option value="pt-BR-FranciscaNeural">Francisca (Natural)</option>
-                            <option value="pt-BR-LeilaNeural">Leila (Jovem)</option>
-                            <option value="pt-BR-BrendaNeural">Brenda</option>
-                            <option value="pt-BR-ElzaNeural">Elza</option>
-                            <option value="pt-BR-GiovannaNeural">Giovanna</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="English (US)">
+                    <optgroup label="🇺🇸 English (US)">
                         <optgroup label="Male">
                             <option value="en-US-GuyNeural">Guy (Natural)</option>
-                            <option value="en-US-DavisNeural">Davis (Young)</option>
                             <option value="en-US-AndrewNeural">Andrew</option>
                             <option value="en-US-ChristopherNeural">Christopher</option>
                             <option value="en-US-EricNeural">Eric</option>
@@ -480,19 +471,18 @@
                         </optgroup>
                         <optgroup label="Female">
                             <option value="en-US-JennyNeural">Jenny (Natural)</option>
-                            <option value="en-US-AriaNeural">Aria (Young)</option>
                             <option value="en-US-MichelleNeural">Michelle</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="Español (España)">
+                    <optgroup label="🇪🇸 Español (España)">
                         <option value="es-ES-AlvaroNeural">Alvaro (Masculino)</option>
                         <option value="es-ES-ElviraNeural">Elvira (Feminino)</option>
                     </optgroup>
-                    <optgroup label="Français (France)">
+                    <optgroup label="🇷 Français (France)">
                         <option value="fr-FR-HenriNeural">Henri (Masculino)</option>
                         <option value="fr-FR-DeniseNeural">Denise (Feminino)</option>
                     </optgroup>
-                    <optgroup label="Deutsch (Germany)">
+                    <optgroup label="🇩 Deutsch (Germany)">
                         <option value="de-DE-ConradNeural">Conrad (Masculino)</option>
                         <option value="de-DE-KatjaNeural">Katja (Feminino)</option>
                     </optgroup>
@@ -517,7 +507,7 @@
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn">🎵 Gerar Áudio</button>
+            <button type="submit" id="submitBtn"> Gerar Áudio</button>
             
             <div class="loading" id="loading">Gerando áudio... Por favor, aguarde.</div>
             <div class="warning" id="warning">
@@ -555,7 +545,7 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? '️' : '🌙';
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         });
 
         // Sliders
@@ -721,7 +711,7 @@
                     <div class="history-item-text" title="Clique para ouvir">${item.texto}</div>
                     <div class="history-item-actions">
                         <div class="history-item-voz">${item.voz.split('-').pop().replace('Neural', '')}</div>
-                        <button class="btn-delete" onclick="deletarAudio(${index})" title="Deletar este áudio">🗑️</button>
+                        <button class="btn-delete" onclick="deletarAudio(${index})" title="Deletar este áudio">️</button>
                     </div>
                 `;
                 div.querySelector('.history-item-text').addEventListener('click', () => {

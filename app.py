@@ -5,7 +5,6 @@ import uuid
 import time
 import logging
 
-# Configurar logs detalhados
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,6 @@ UPLOAD_FOLDER = 'static'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def limpar_arquivos_antigos():
-    """Remove arquivos MP3 com mais de 1 hora"""
     try:
         agora = time.time()
         for arquivo in os.listdir(UPLOAD_FOLDER):
@@ -27,35 +25,20 @@ def limpar_arquivos_antigos():
     except Exception as e:
         logger.error(f"Erro ao limpar arquivos: {e}")
 
-# Lista estrita de vozes permitidas
+# Apenas vozes que FUNCIONARAM no teste
 VOZES_PERMITIDAS = [
-    "pt-BR-AntonioNeural", "pt-BR-DonatoNeural", 
-    "pt-BR-FranciscaNeural", "pt-BR-LeilaNeural",
-    "pt-BR-BrendaNeural", "pt-BR-ElzaNeural",
-    "pt-BR-GiovannaNeural", "pt-BR-HumbertoNeural",
-    "pt-BR-JulioNeural", "pt-BR-NicolauNeural",
-    "en-US-GuyNeural", "en-US-DavisNeural", 
-    "en-US-JennyNeural", "en-US-AriaNeural",
-    "en-US-AndrewNeural", "en-US-ChristopherNeural",
-    "en-US-EricNeural", "en-US-MichelleNeural",
+    "pt-BR-AntonioNeural", "pt-BR-FranciscaNeural",
+    "en-US-GuyNeural", "en-US-JennyNeural", "en-US-AndrewNeural",
+    "en-US-ChristopherNeural", "en-US-EricNeural", "en-US-MichelleNeural",
     "en-US-RogerNeural", "en-US-SteffanNeural",
     "es-ES-AlvaroNeural", "es-ES-ElviraNeural",
     "fr-FR-HenriNeural", "fr-FR-DeniseNeural",
     "de-DE-ConradNeural", "de-DE-KatjaNeural"
 ]
 
-# Mapeamento de fallback: se uma voz falhar, usa esta
 FALLBACK_VOZES = {
-    "pt-BR-DonatoNeural": "pt-BR-AntonioNeural",
-    "pt-BR-LeilaNeural": "pt-BR-FranciscaNeural",
-    "pt-BR-BrendaNeural": "pt-BR-FranciscaNeural",
-    "pt-BR-ElzaNeural": "pt-BR-FranciscaNeural",
-    "pt-BR-GiovannaNeural": "pt-BR-FranciscaNeural",
-    "pt-BR-HumbertoNeural": "pt-BR-AntonioNeural",
-    "pt-BR-JulioNeural": "pt-BR-AntonioNeural",
-    "pt-BR-NicolauNeural": "pt-BR-AntonioNeural",
-    "en-US-DavisNeural": "en-US-GuyNeural",
-    "en-US-AriaNeural": "en-US-JennyNeural",
+    "en-US-GuyNeural": "en-US-JennyNeural",
+    "en-US-JennyNeural": "en-US-GuyNeural",
     "en-US-AndrewNeural": "en-US-GuyNeural",
     "en-US-ChristopherNeural": "en-US-GuyNeural",
     "en-US-EricNeural": "en-US-GuyNeural",
@@ -73,24 +56,15 @@ FALLBACK_VOZES = {
 VOZES = {
     "Português (Brasil)": {
         "Masculinas": [
-            ("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)"),
-            ("pt-BR-DonatoNeural", "Donato (Jovem)"),
-            ("pt-BR-HumbertoNeural", "Humberto"),
-            ("pt-BR-JulioNeural", "Julio"),
-            ("pt-BR-NicolauNeural", "Nicolau")
+            ("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)")
         ],
         "Femininas": [
-            ("pt-BR-FranciscaNeural", "Francisca (Natural)"),
-            ("pt-BR-LeilaNeural", "Leila (Jovem)"),
-            ("pt-BR-BrendaNeural", "Brenda"),
-            ("pt-BR-ElzaNeural", "Elza"),
-            ("pt-BR-GiovannaNeural", "Giovanna")
+            ("pt-BR-FranciscaNeural", "Francisca (Natural)")
         ]
     },
     "English (US)": {
         "Male": [
             ("en-US-GuyNeural", "Guy (Natural)"),
-            ("en-US-DavisNeural", "Davis (Young)"),
             ("en-US-AndrewNeural", "Andrew"),
             ("en-US-ChristopherNeural", "Christopher"),
             ("en-US-EricNeural", "Eric"),
@@ -99,7 +73,6 @@ VOZES = {
         ],
         "Female": [
             ("en-US-JennyNeural", "Jenny (Natural)"),
-            ("en-US-AriaNeural", "Aria (Young)"),
             ("en-US-MichelleNeural", "Michelle")
         ]
     },
@@ -218,20 +191,7 @@ def download(nome_arquivo):
 
 @app.route('/testar_vozes')
 def testar_vozes():
-    """Página que testa todas as vozes automaticamente"""
-    
-    todas_vozes = [
-        "pt-BR-AntonioNeural", "pt-BR-DonatoNeural", "pt-BR-FranciscaNeural", 
-        "pt-BR-LeilaNeural", "pt-BR-BrendaNeural", "pt-BR-ElzaNeural",
-        "pt-BR-GiovannaNeural", "pt-BR-HumbertoNeural", "pt-BR-JulioNeural",
-        "pt-BR-NicolauNeural",
-        "en-US-GuyNeural", "en-US-JennyNeural", "en-US-AndrewNeural",
-        "en-US-ChristopherNeural", "en-US-EricNeural", "en-US-MichelleNeural",
-        "en-US-RogerNeural", "en-US-SteffanNeural",
-        "es-ES-AlvaroNeural", "es-ES-ElviraNeural",
-        "fr-FR-HenriNeural", "fr-FR-DeniseNeural",
-        "de-DE-ConradNeural", "de-DE-KatjaNeural"
-    ]
+    todas_vozes = VOZES_PERMITIDAS
     
     resultados = []
     texto_teste = "Teste de voz."
@@ -274,14 +234,14 @@ def testar_vozes():
     </head>
     <body>
         <div class="container">
-            <h1>🧪 Resultado do Teste de Vozes</h1>
+            <h1> Resultado do Teste de Vozes</h1>
             <div class="resumo">
                 <h2>📊 Resumo:</h2>
                 <p><strong>Total testado:</strong> {len(resultados)} vozes</p>
                 <p><strong>✅ Funcionaram:</strong> {len([r for r in resultados if '✅' in r[1]])}</p>
-                <p><strong>❌ Falharam:</strong> {len([r for r in resultados if '❌' in r[1]])}</p>
+                <p><strong> Falharam:</strong> {len([r for r in resultados if '❌' in r[1]])}</p>
             </div>
-            <h2> Resultados Detalhados:</h2>
+            <h2>📋 Resultados Detalhados:</h2>
     """
     
     for voz, status, classe in resultados:
