@@ -7,11 +7,9 @@ import time
 
 app = Flask(__name__)
 
-# Configurar pasta para salvar áudios
 UPLOAD_FOLDER = 'static'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Limpar arquivos com mais de 1 hora
 def limpar_arquivos_antigos():
     try:
         agora = time.time()
@@ -23,61 +21,35 @@ def limpar_arquivos_antigos():
     except:
         pass
 
-# Lista completa de vozes disponíveis
+# Lista estrita de vozes permitidas (apenas as estáveis)
+VOZES_PERMITIDAS = [
+    "pt-BR-AntonioNeural", "pt-BR-DonatoNeural", "pt-BR-FranciscaNeural", "pt-BR-LeilaNeural",
+    "en-US-GuyNeural", "en-US-DavisNeural", "en-US-JennyNeural", "en-US-AriaNeural",
+    "es-ES-AlvaroNeural", "es-ES-ElviraNeural",
+    "fr-FR-HenriNeural", "fr-FR-DeniseNeural",
+    "de-DE-ConradNeural", "de-DE-KatjaNeural"
+]
+
 VOZES = {
     "Português (Brasil)": {
-        "Masculinas": [
-            ("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)"),
-            ("pt-BR-DonatoNeural", "Donato (Jovem)"),
-            ("pt-BR-FabioNeural", "Fabio (Formal)")
-        ],
-        "Femininas": [
-            ("pt-BR-FranciscaNeural", "Francisca (Natural)"),
-            ("pt-BR-LeilaNeural", "Leila (Jovem)"),
-            ("pt-BR-ValerioNeural", "Valerio (Suave)")
-        ]
+        "Masculinas": [("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)"), ("pt-BR-DonatoNeural", "Donato (Jovem)")],
+        "Femininas": [("pt-BR-FranciscaNeural", "Francisca (Natural)"), ("pt-BR-LeilaNeural", "Leila (Jovem)")]
     },
     "English (US)": {
-        "Male": [
-            ("en-US-GuyNeural", "Guy (Natural)"),
-            ("en-US-DavisNeural", "Davis (Young)"),
-            ("en-US-TonyNeural", "Tony (Casual)")
-        ],
-        "Female": [
-            ("en-US-JennyNeural", "Jenny (Natural)"),
-            ("en-US-AriaNeural", "Aria (Young)"),
-            ("en-US-SaraNeural", "Sara (Soft)")
-        ]
+        "Male": [("en-US-GuyNeural", "Guy (Natural)"), ("en-US-DavisNeural", "Davis (Young)")],
+        "Female": [("en-US-JennyNeural", "Jenny (Natural)"), ("en-US-AriaNeural", "Aria (Young)")]
     },
     "Español (España)": {
-        "Masculinas": [
-            ("es-ES-AlvaroNeural", "Alvaro (Natural)"),
-            ("es-ES-ArnauNeural", "Arnau (Jovem)")
-        ],
-        "Femininas": [
-            ("es-ES-ElviraNeural", "Elvira (Natural)"),
-            ("es-ES-AbrilNeural", "Abril (Jovem)")
-        ]
+        "Masculinas": [("es-ES-AlvaroNeural", "Alvaro (Natural)")],
+        "Femininas": [("es-ES-ElviraNeural", "Elvira (Natural)")]
     },
     "Français (France)": {
-        "Masculines": [
-            ("fr-FR-HenriNeural", "Henri (Natural)"),
-            ("fr-FR-ClaudeNeural", "Claude (Formal)")
-        ],
-        "Féminines": [
-            ("fr-FR-DeniseNeural", "Denise (Natural)"),
-            ("fr-FR-EloiseNeural", "Eloise (Jovem)")
-        ]
+        "Masculines": [("fr-FR-HenriNeural", "Henri (Natural)")],
+        "Féminines": [("fr-FR-DeniseNeural", "Denise (Natural)")]
     },
     "Deutsch (Germany)": {
-        "Männlich": [
-            ("de-DE-ConradNeural", "Conrad (Natural)"),
-            ("de-DE-KillianNeural", "Killian (Jovem)")
-        ],
-        "Weiblich": [
-            ("de-DE-KatjaNeural", "Katja (Natural)"),
-            ("de-DE-AmalaNeural", "Amala (Suave)")
-        ]
+        "Männlich": [("de-DE-ConradNeural", "Conrad (Natural)")],
+        "Weiblich": [("de-DE-KatjaNeural", "Katja (Natural)")]
     }
 }
 
@@ -94,34 +66,40 @@ def gerar_audio():
         rate = request.form.get('rate', '+0%')
         pitch = request.form.get('pitch', '+0Hz')
         
-        if not texto:
-            return jsonify({'erro': 'Texto não fornecido'}), 400
+        if not texto or not voz:
+            return jsonify({'erro': 'Dados incompletos'}), 400
         
-        if not voz:
-            return jsonify({'erro': 'Voz não selecionada'}), 400
+        # SEGURANÇA: Se o navegador enviar uma voz inválida (ex: Fabio), força a Antonio
+        if voz not in VOZES_PERMITIDAS:
+            voz = "pt-BR-AntonioNeural"
         
         nome_arquivo = f"audio_{uuid.uuid4().hex[:8]}.mp3"
         caminho_completo = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         
-        async def criar_audio_com_retry():
-            max_tentativas = 3
-            for tentativa in range(max_tentativas):
-                try:
-                    communicate = edge_tts.Communicate(
-                        texto,
-                        voz,
-                        rate=rate,
-                        pitch=pitch
-                    )
-                    await communicate.save(caminho_completo)
-                    return True
-                except Exception as e:
-                    if tentativa < max_tentativas - 1:
-                        await asyncio.sleep(2)
-                    else:
-                        raise e
-        
-        asyncio.run(criar_audio_com_retry())
+        # Função assíncrona segura para Flask
+        def rodar_async():
+            async def _gerar():
+                max_tentativas = 3
+                for tentativa in range(max_tentativas):
+                    try:
+                        communicate = edge_tts.Communicate(texto, voz, rate=rate, pitch=pitch)
+                        await communicate.save(caminho_completo)
+                        return True
+                    except Exception as e:
+                        if tentativa < max_tentativas - 1:
+                            await asyncio.sleep(2)
+                        else:
+                            raise e
+            
+            # Cria um novo loop de eventos para evitar conflitos no Render
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(_gerar())
+            finally:
+                loop.close()
+
+        rodar_async()
         
         return jsonify({
             'sucesso': True, 
@@ -131,12 +109,7 @@ def gerar_audio():
         })
     
     except Exception as e:
-        erro_msg = str(e)
-        if 'No audio was received' in erro_msg:
-            erro_msg = 'Não foi possível gerar o áudio. Aguarde 5 segundos e tente novamente, ou use outra voz.'
-        elif 'DOCTYPE' in erro_msg or 'HTML' in erro_msg:
-            erro_msg = 'Erro de conexão com o servidor. Tente novamente em alguns segundos.'
-        return jsonify({'erro': erro_msg}), 500
+        return jsonify({'erro': f'Erro ao gerar áudio: {str(e)}'}), 500
 
 @app.route('/download/<nome_arquivo>')
 def download(nome_arquivo):
@@ -146,5 +119,5 @@ def download(nome_arquivo):
     return jsonify({'erro': 'Arquivo não encontrado'}), 404
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000)) # Render usa portas dinâmicas
     app.run(debug=False, host='0.0.0.0', port=port)
