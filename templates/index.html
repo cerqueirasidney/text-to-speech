@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>️ Texto para Fala</title>
+    <title>Texto para Fala</title>
     <style>
         * {
             margin: 0;
@@ -21,6 +21,7 @@
             --border: #e0e0e0;
             --success: #28a745;
             --error: #dc3545;
+            --warning: #ffc107;
             --shadow: rgba(0, 0, 0, 0.1);
         }
 
@@ -298,6 +299,26 @@
             display: block;
         }
 
+        .warning {
+            background: rgba(255, 193, 7, 0.15);
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid var(--warning);
+        }
+
+        .warning.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .countdown {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
         .history {
             margin-top: 30px;
             padding: 20px;
@@ -368,7 +389,7 @@
     <div class="container">
         <div class="header">
             <h1>🎙️ Texto para Fala</h1>
-            <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
+            <button class="theme-toggle" id="themeToggle" title="Alternar tema"></button>
         </div>
         
         <form id="ttsForm">
@@ -377,14 +398,14 @@
                 <textarea id="texto" name="texto" placeholder="Digite o texto que você quer converter em áudio..." required></textarea>
                 <div class="button-group">
                     <button type="button" class="btn-secondary" id="limparBtn">🗑️ Limpar</button>
-                    <button type="button" class="btn-secondary" id="exemploBtn">📝 Exemplo</button>
+                    <button type="button" class="btn-secondary" id="exemploBtn"> Exemplo</button>
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="voz">Selecione a voz:</label>
                 <select id="voz" name="voz" required>
-                    <optgroup label="🇧🇷 Português (Brasil)">
+                    <optgroup label="Português (Brasil)">
                         <optgroup label="Masculinas">
                             <option value="pt-BR-AntonioNeural">Antonio (Maduro, Natural)</option>
                             <option value="pt-BR-DonatoNeural">Donato (Jovem)</option>
@@ -396,7 +417,7 @@
                             <option value="pt-BR-ValerioNeural">Valerio (Suave)</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇺🇸 English (US)">
+                    <optgroup label="English (US)">
                         <optgroup label="Male">
                             <option value="en-US-GuyNeural">Guy (Natural)</option>
                             <option value="en-US-DavisNeural">Davis (Young)</option>
@@ -408,7 +429,7 @@
                             <option value="en-US-SaraNeural">Sara (Soft)</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇪🇸 Español (España)">
+                    <optgroup label="Español (España)">
                         <optgroup label="Masculinas">
                             <option value="es-ES-AlvaroNeural">Alvaro (Natural)</option>
                             <option value="es-ES-ArnauNeural">Arnau (Jovem)</option>
@@ -418,7 +439,7 @@
                             <option value="es-ES-AbrilNeural">Abril (Jovem)</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇫🇷 Français (France)">
+                    <optgroup label="Français (France)">
                         <optgroup label="Masculines">
                             <option value="fr-FR-HenriNeural">Henri (Natural)</option>
                             <option value="fr-FR-ClaudeNeural">Claude (Formal)</option>
@@ -428,7 +449,7 @@
                             <option value="fr-FR-EloiseNeural">Eloise (Jovem)</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇩🇪 Deutsch (Germany)">
+                    <optgroup label="Deutsch (Germany)">
                         <optgroup label="Männlich">
                             <option value="de-DE-ConradNeural">Conrad (Natural)</option>
                             <option value="de-DE-KillianNeural">Killian (Jovem)</option>
@@ -462,6 +483,9 @@
             <button type="submit" id="submitBtn">🎵 Gerar Áudio</button>
             
             <div class="loading" id="loading">Gerando áudio... Por favor, aguarde.</div>
+            <div class="warning" id="warning">
+                ️ Aguarde <span class="countdown" id="countdown">5</span> segundos para gerar o próximo áudio.
+            </div>
             <div class="error" id="error"></div>
         </form>
 
@@ -491,7 +515,7 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '';
         });
 
         // Sliders
@@ -528,6 +552,8 @@
         const form = document.getElementById('ttsForm');
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
+        const warning = document.getElementById('warning');
+        const countdown = document.getElementById('countdown');
         const error = document.getElementById('error');
         const audioContainer = document.getElementById('audioContainer');
         const audioPlayer = document.getElementById('audioPlayer');
@@ -539,14 +565,24 @@
         let historico = JSON.parse(localStorage.getItem('historico') || '[]');
         atualizarHistorico();
 
+        // Controle de tempo entre gerações
+        let podeGerar = true;
+        let tempoRestante = 0;
+
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            if (!podeGerar) {
+                return;
+            }
+            
             error.classList.remove('show');
             audioContainer.classList.remove('show');
+            warning.classList.remove('show');
             
             loading.classList.add('show');
             submitBtn.disabled = true;
+            podeGerar = false;
             
             const formData = new FormData(form);
             const rate = rateSlider.value;
@@ -588,7 +624,23 @@
                 error.classList.add('show');
             } finally {
                 loading.classList.remove('show');
-                submitBtn.disabled = false;
+                
+                // Iniciar contagem regressiva de 5 segundos
+                tempoRestante = 5;
+                countdown.textContent = tempoRestante;
+                warning.classList.add('show');
+                
+                const intervalo = setInterval(() => {
+                    tempoRestante--;
+                    countdown.textContent = tempoRestante;
+                    
+                    if (tempoRestante <= 0) {
+                        clearInterval(intervalo);
+                        podeGerar = true;
+                        submitBtn.disabled = false;
+                        warning.classList.remove('show');
+                    }
+                }, 1000);
             }
         });
 

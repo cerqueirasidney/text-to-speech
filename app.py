@@ -11,21 +11,21 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Limpar arquivos com mais de 1 hora (para não encher o disco)
+# Limpar arquivos com mais de 1 hora
 def limpar_arquivos_antigos():
     try:
         agora = time.time()
         for arquivo in os.listdir(UPLOAD_FOLDER):
             caminho = os.path.join(UPLOAD_FOLDER, arquivo)
             if os.path.isfile(caminho):
-                if agora - os.path.getmtime(caminho) > 3600:  # 1 hora
+                if agora - os.path.getmtime(caminho) > 3600:
                     os.remove(caminho)
     except:
         pass
 
 # Lista completa de vozes disponíveis
 VOZES = {
-    "🇧🇷 Português (Brasil)": {
+    "Português (Brasil)": {
         "Masculinas": [
             ("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)"),
             ("pt-BR-DonatoNeural", "Donato (Jovem)"),
@@ -37,7 +37,7 @@ VOZES = {
             ("pt-BR-ValerioNeural", "Valerio (Suave)")
         ]
     },
-    "🇺🇸 English (US)": {
+    "English (US)": {
         "Male": [
             ("en-US-GuyNeural", "Guy (Natural)"),
             ("en-US-DavisNeural", "Davis (Young)"),
@@ -49,7 +49,7 @@ VOZES = {
             ("en-US-SaraNeural", "Sara (Soft)")
         ]
     },
-    "🇪 Español (España)": {
+    "Español (España)": {
         "Masculinas": [
             ("es-ES-AlvaroNeural", "Alvaro (Natural)"),
             ("es-ES-ArnauNeural", "Arnau (Jovem)")
@@ -59,7 +59,7 @@ VOZES = {
             ("es-ES-AbrilNeural", "Abril (Jovem)")
         ]
     },
-    "🇫🇷 Français (France)": {
+    "Français (France)": {
         "Masculines": [
             ("fr-FR-HenriNeural", "Henri (Natural)"),
             ("fr-FR-ClaudeNeural", "Claude (Formal)")
@@ -69,7 +69,7 @@ VOZES = {
             ("fr-FR-EloiseNeural", "Eloise (Jovem)")
         ]
     },
-    "🇪 Deutsch (Germany)": {
+    "Deutsch (Germany)": {
         "Männlich": [
             ("de-DE-ConradNeural", "Conrad (Natural)"),
             ("de-DE-KillianNeural", "Killian (Jovem)")
@@ -97,10 +97,12 @@ def gerar_audio():
         if not texto:
             return jsonify({'erro': 'Texto não fornecido'}), 400
         
+        if not voz:
+            return jsonify({'erro': 'Voz não selecionada'}), 400
+        
         nome_arquivo = f"audio_{uuid.uuid4().hex[:8]}.mp3"
         caminho_completo = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         
-        # Função assíncrona com retry (tentar até 3 vezes)
         async def criar_audio_com_retry():
             max_tentativas = 3
             for tentativa in range(max_tentativas):
@@ -115,7 +117,7 @@ def gerar_audio():
                     return True
                 except Exception as e:
                     if tentativa < max_tentativas - 1:
-                        await asyncio.sleep(2)  # Esperar 2 segundos antes de tentar de novo
+                        await asyncio.sleep(2)
                     else:
                         raise e
         
@@ -130,9 +132,10 @@ def gerar_audio():
     
     except Exception as e:
         erro_msg = str(e)
-        # Mensagem mais amigável para o usuário
         if 'No audio was received' in erro_msg:
-            erro_msg = 'Não foi possível gerar o áudio. Tente novamente em alguns segundos ou use outra voz.'
+            erro_msg = 'Não foi possível gerar o áudio. Aguarde 5 segundos e tente novamente, ou use outra voz.'
+        elif 'DOCTYPE' in erro_msg or 'HTML' in erro_msg:
+            erro_msg = 'Erro de conexão com o servidor. Tente novamente em alguns segundos.'
         return jsonify({'erro': erro_msg}), 500
 
 @app.route('/download/<nome_arquivo>')
