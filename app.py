@@ -6,9 +6,11 @@ import uuid
 
 app = Flask(__name__)
 
+# Configurar pasta para salvar áudios
 UPLOAD_FOLDER = 'static'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Lista de vozes disponíveis (para referência)
 VOZES = {
     "Português (Brasil)": {
         "Masculinas": [
@@ -43,6 +45,7 @@ def index():
 @app.route('/gerar_audio', methods=['POST'])
 def gerar_audio():
     try:
+        # Pegar dados do formulário
         texto = request.form.get('texto')
         voz = request.form.get('voz')
         rate = request.form.get('rate', '+0%')
@@ -51,9 +54,11 @@ def gerar_audio():
         if not texto:
             return jsonify({'erro': 'Texto não fornecido'}), 400
         
+        # Gerar nome único para o arquivo
         nome_arquivo = f"audio_{uuid.uuid4().hex[:8]}.mp3"
         caminho_completo = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         
+        # Função assíncrona para gerar o áudio
         async def criar_audio():
             communicate = edge_tts.Communicate(
                 texto,
@@ -63,8 +68,10 @@ def gerar_audio():
             )
             await communicate.save(caminho_completo)
         
+        # Executar a função assíncrona
         asyncio.run(criar_audio())
         
+        # Retornar o caminho do arquivo
         return jsonify({'sucesso': True, 'arquivo': f"/static/{nome_arquivo}"})
     
     except Exception as e:
@@ -77,5 +84,7 @@ def download(nome_arquivo):
         return send_file(caminho, as_attachment=True)
     return jsonify({'erro': 'Arquivo não encontrado'}), 404
 
+# Configuração para rodar localmente e no Render
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
