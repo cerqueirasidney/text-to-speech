@@ -3,12 +3,25 @@ import edge_tts
 import asyncio
 import os
 import uuid
+import time
 
 app = Flask(__name__)
 
 # Configurar pasta para salvar áudios
 UPLOAD_FOLDER = 'static'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Limpar arquivos com mais de 1 hora (para não encher o disco)
+def limpar_arquivos_antigos():
+    try:
+        agora = time.time()
+        for arquivo in os.listdir(UPLOAD_FOLDER):
+            caminho = os.path.join(UPLOAD_FOLDER, arquivo)
+            if os.path.isfile(caminho):
+                if agora - os.path.getmtime(caminho) > 3600:  # 1 hora
+                    os.remove(caminho)
+    except:
+        pass
 
 # Lista completa de vozes disponíveis
 VOZES = {
@@ -36,7 +49,7 @@ VOZES = {
             ("en-US-SaraNeural", "Sara (Soft)")
         ]
     },
-    "🇪🇸 Español (España)": {
+    "🇪 Español (España)": {
         "Masculinas": [
             ("es-ES-AlvaroNeural", "Alvaro (Natural)"),
             ("es-ES-ArnauNeural", "Arnau (Jovem)")
@@ -56,7 +69,7 @@ VOZES = {
             ("fr-FR-EloiseNeural", "Eloise (Jovem)")
         ]
     },
-    "🇩🇪 Deutsch (Germany)": {
+    "🇪 Deutsch (Germany)": {
         "Männlich": [
             ("de-DE-ConradNeural", "Conrad (Natural)"),
             ("de-DE-KillianNeural", "Killian (Jovem)")
@@ -70,6 +83,7 @@ VOZES = {
 
 @app.route('/')
 def index():
+    limpar_arquivos_antigos()
     return render_template('index.html', vozes=VOZES)
 
 @app.route('/gerar_audio', methods=['POST'])
@@ -86,16 +100,26 @@ def gerar_audio():
         nome_arquivo = f"audio_{uuid.uuid4().hex[:8]}.mp3"
         caminho_completo = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         
-        async def criar_audio():
-            communicate = edge_tts.Communicate(
-                texto,
-                voz,
-                rate=rate,
-                pitch=pitch
-            )
-            await communicate.save(caminho_completo)
+        # Função assíncrona com retry (tentar até 3 vezes)
+        async def criar_audio_com_retry():
+            max_tentativas = 3
+            for tentativa in range(max_tentativas):
+                try:
+                    communicate = edge_tts.Communicate(
+                        texto,
+                        voz,
+                        rate=rate,
+                        pitch=pitch
+                    )
+                    await communicate.save(caminho_completo)
+                    return True
+                except Exception as e:
+                    if tentativa < max_tentativas - 1:
+                        await asyncio.sleep(2)  # Esperar 2 segundos antes de tentar de novo
+                    else:
+                        raise e
         
-        asyncio.run(criar_audio())
+        asyncio.run(criar_audio_com_retry())
         
         return jsonify({
             'sucesso': True, 
@@ -105,7 +129,11 @@ def gerar_audio():
         })
     
     except Exception as e:
-        return jsonify({'erro': str(e)}), 500
+        erro_msg = str(e)
+        # Mensagem mais amigável para o usuário
+        if 'No audio was received' in erro_msg:
+            erro_msg = 'Não foi possível gerar o áudio. Tente novamente em alguns segundos ou use outra voz.'
+        return jsonify({'erro': erro_msg}), 500
 
 @app.route('/download/<nome_arquivo>')
 def download(nome_arquivo):
