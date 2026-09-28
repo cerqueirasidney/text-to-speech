@@ -27,12 +27,18 @@ def limpar_arquivos_antigos():
     except Exception as e:
         logger.error(f"Erro ao limpar arquivos: {e}")
 
-# Lista estrita de vozes permitidas (apenas as mais estáveis)
+# Lista estrita de vozes permitidas
 VOZES_PERMITIDAS = [
     "pt-BR-AntonioNeural", "pt-BR-DonatoNeural", 
     "pt-BR-FranciscaNeural", "pt-BR-LeilaNeural",
+    "pt-BR-BrendaNeural", "pt-BR-ElzaNeural",
+    "pt-BR-GiovannaNeural", "pt-BR-HumbertoNeural",
+    "pt-BR-JulioNeural", "pt-BR-NicolauNeural",
     "en-US-GuyNeural", "en-US-DavisNeural", 
     "en-US-JennyNeural", "en-US-AriaNeural",
+    "en-US-AndrewNeural", "en-US-ChristopherNeural",
+    "en-US-EricNeural", "en-US-MichelleNeural",
+    "en-US-RogerNeural", "en-US-SteffanNeural",
     "es-ES-AlvaroNeural", "es-ES-ElviraNeural",
     "fr-FR-HenriNeural", "fr-FR-DeniseNeural",
     "de-DE-ConradNeural", "de-DE-KatjaNeural"
@@ -42,8 +48,20 @@ VOZES_PERMITIDAS = [
 FALLBACK_VOZES = {
     "pt-BR-DonatoNeural": "pt-BR-AntonioNeural",
     "pt-BR-LeilaNeural": "pt-BR-FranciscaNeural",
+    "pt-BR-BrendaNeural": "pt-BR-FranciscaNeural",
+    "pt-BR-ElzaNeural": "pt-BR-FranciscaNeural",
+    "pt-BR-GiovannaNeural": "pt-BR-FranciscaNeural",
+    "pt-BR-HumbertoNeural": "pt-BR-AntonioNeural",
+    "pt-BR-JulioNeural": "pt-BR-AntonioNeural",
+    "pt-BR-NicolauNeural": "pt-BR-AntonioNeural",
     "en-US-DavisNeural": "en-US-GuyNeural",
     "en-US-AriaNeural": "en-US-JennyNeural",
+    "en-US-AndrewNeural": "en-US-GuyNeural",
+    "en-US-ChristopherNeural": "en-US-GuyNeural",
+    "en-US-EricNeural": "en-US-GuyNeural",
+    "en-US-MichelleNeural": "en-US-JennyNeural",
+    "en-US-RogerNeural": "en-US-GuyNeural",
+    "en-US-SteffanNeural": "en-US-GuyNeural",
     "es-ES-AlvaroNeural": "pt-BR-AntonioNeural",
     "es-ES-ElviraNeural": "pt-BR-FranciscaNeural",
     "fr-FR-HenriNeural": "pt-BR-AntonioNeural",
@@ -56,21 +74,33 @@ VOZES = {
     "Português (Brasil)": {
         "Masculinas": [
             ("pt-BR-AntonioNeural", "Antonio (Maduro, Natural)"),
-            ("pt-BR-DonatoNeural", "Donato (Jovem)")
+            ("pt-BR-DonatoNeural", "Donato (Jovem)"),
+            ("pt-BR-HumbertoNeural", "Humberto"),
+            ("pt-BR-JulioNeural", "Julio"),
+            ("pt-BR-NicolauNeural", "Nicolau")
         ],
         "Femininas": [
             ("pt-BR-FranciscaNeural", "Francisca (Natural)"),
-            ("pt-BR-LeilaNeural", "Leila (Jovem)")
+            ("pt-BR-LeilaNeural", "Leila (Jovem)"),
+            ("pt-BR-BrendaNeural", "Brenda"),
+            ("pt-BR-ElzaNeural", "Elza"),
+            ("pt-BR-GiovannaNeural", "Giovanna")
         ]
     },
     "English (US)": {
         "Male": [
             ("en-US-GuyNeural", "Guy (Natural)"),
-            ("en-US-DavisNeural", "Davis (Young)")
+            ("en-US-DavisNeural", "Davis (Young)"),
+            ("en-US-AndrewNeural", "Andrew"),
+            ("en-US-ChristopherNeural", "Christopher"),
+            ("en-US-EricNeural", "Eric"),
+            ("en-US-RogerNeural", "Roger"),
+            ("en-US-SteffanNeural", "Steffan")
         ],
         "Female": [
             ("en-US-JennyNeural", "Jenny (Natural)"),
-            ("en-US-AriaNeural", "Aria (Young)")
+            ("en-US-AriaNeural", "Aria (Young)"),
+            ("en-US-MichelleNeural", "Michelle")
         ]
     },
     "Español (España)": {
@@ -102,7 +132,6 @@ def gerar_audio():
         
         logger.info(f"Requisição recebida - Voz: {voz}, Rate: {rate}, Pitch: {pitch}")
         
-        # Validação de dados
         if not texto:
             return jsonify({'erro': 'Texto não fornecido'}), 400
         
@@ -110,23 +139,18 @@ def gerar_audio():
             logger.warning(f"Voz inválida recebida: {voz}. Usando Antonio como fallback.")
             voz = "pt-BR-AntonioNeural"
         
-        # Gerar nome único para o arquivo
         nome_arquivo = f"audio_{uuid.uuid4().hex[:8]}.mp3"
         caminho_temp = os.path.join(UPLOAD_FOLDER, f"temp_{nome_arquivo}")
         caminho_final = os.path.join(UPLOAD_FOLDER, nome_arquivo)
         
-        # Tentar gerar o áudio com a voz solicitada
         voz_usada = voz
         fallback_usado = False
         
         try:
             logger.info(f"Tentando gerar áudio com voz: {voz}")
-            
-            # Usar API síncrona do edge-tts (save_sync)
             communicate = edge_tts.Communicate(texto, voz, rate=rate, pitch=pitch)
             communicate.save_sync(caminho_temp)
             
-            # Verificar se o arquivo foi criado corretamente
             if not os.path.exists(caminho_temp) or os.path.getsize(caminho_temp) == 0:
                 raise Exception("Arquivo gerado está vazio ou não existe")
             
@@ -136,7 +160,6 @@ def gerar_audio():
             erro_msg = str(e)
             logger.warning(f"Falha com voz {voz}: {erro_msg}")
             
-            # Tentar fallback se disponível
             voz_fallback = FALLBACK_VOZES.get(voz)
             
             if voz_fallback:
@@ -155,25 +178,21 @@ def gerar_audio():
                     
                 except Exception as e2:
                     logger.error(f"Fallback também falhou: {str(e2)}")
-                    # Limpar arquivo temporário se existir
                     if os.path.exists(caminho_temp):
                         os.remove(caminho_temp)
                     return jsonify({
                         'erro': f'Não foi possível gerar o áudio. Tente novamente em alguns segundos ou use outra voz. (Erro original: {erro_msg})'
                     }), 500
             else:
-                # Sem fallback disponível
                 if os.path.exists(caminho_temp):
                     os.remove(caminho_temp)
                 return jsonify({
                     'erro': f'Não foi possível gerar o áudio. Tente novamente em alguns segundos. (Erro: {erro_msg})'
                 }), 500
         
-        # Renomear arquivo temporário para final (operação atômica)
         os.rename(caminho_temp, caminho_final)
         logger.info(f"Arquivo renomeado: {caminho_final}")
         
-        # Montar mensagem de resposta
         mensagem_fallback = ""
         if fallback_usado:
             mensagem_fallback = f" A voz original ({voz.split('-')[-1].replace('Neural', '')}) estava indisponível. Áudio gerado com {voz_usada.split('-')[-1].replace('Neural', '')}."
@@ -196,6 +215,86 @@ def download(nome_arquivo):
     if os.path.exists(caminho):
         return send_file(caminho, as_attachment=True)
     return jsonify({'erro': 'Arquivo não encontrado'}), 404
+
+@app.route('/testar_vozes')
+def testar_vozes():
+    """Página que testa todas as vozes automaticamente"""
+    
+    todas_vozes = [
+        "pt-BR-AntonioNeural", "pt-BR-DonatoNeural", "pt-BR-FranciscaNeural", 
+        "pt-BR-LeilaNeural", "pt-BR-BrendaNeural", "pt-BR-ElzaNeural",
+        "pt-BR-GiovannaNeural", "pt-BR-HumbertoNeural", "pt-BR-JulioNeural",
+        "pt-BR-NicolauNeural",
+        "en-US-GuyNeural", "en-US-JennyNeural", "en-US-AndrewNeural",
+        "en-US-ChristopherNeural", "en-US-EricNeural", "en-US-MichelleNeural",
+        "en-US-RogerNeural", "en-US-SteffanNeural",
+        "es-ES-AlvaroNeural", "es-ES-ElviraNeural",
+        "fr-FR-HenriNeural", "fr-FR-DeniseNeural",
+        "de-DE-ConradNeural", "de-DE-KatjaNeural"
+    ]
+    
+    resultados = []
+    texto_teste = "Teste de voz."
+    
+    for voz in todas_vozes:
+        try:
+            communicate = edge_tts.Communicate(texto_teste, voz)
+            arquivo_teste = f"static/test_{voz}.mp3"
+            communicate.save_sync(arquivo_teste)
+            
+            if os.path.exists(arquivo_teste) and os.path.getsize(arquivo_teste) > 0:
+                resultados.append((voz, "✅ FUNCIONOU", "success"))
+                os.remove(arquivo_teste)
+            else:
+                resultados.append((voz, "⚠️ Arquivo vazio", "error"))
+                
+        except Exception as e:
+            resultados.append((voz, f"❌ Erro: {str(e)[:80]}", "error"))
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Teste de Vozes</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Arial; padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }}
+            .container {{ background: white; padding: 30px; border-radius: 15px; max-width: 900px; margin: 0 auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }}
+            h1 {{ color: #667eea; margin-bottom: 20px; }}
+            h2 {{ color: #333; margin-top: 30px; }}
+            .success {{ background: #d4edda; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #28a745; }}
+            .error {{ background: #f8d7da; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #dc3545; }}
+            .resumo {{ background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 10px; }}
+            .resumo p {{ margin: 8px 0; font-size: 1.1em; }}
+            .btn {{ display: inline-block; margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }}
+            .btn:hover {{ background: #764ba2; }}
+            strong {{ color: #333; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🧪 Resultado do Teste de Vozes</h1>
+            <div class="resumo">
+                <h2>📊 Resumo:</h2>
+                <p><strong>Total testado:</strong> {len(resultados)} vozes</p>
+                <p><strong>✅ Funcionaram:</strong> {len([r for r in resultados if '✅' in r[1]])}</p>
+                <p><strong>❌ Falharam:</strong> {len([r for r in resultados if '❌' in r[1]])}</p>
+            </div>
+            <h2> Resultados Detalhados:</h2>
+    """
+    
+    for voz, status, classe in resultados:
+        html += f'<div class="{classe}"><strong>{voz}</strong> — {status}</div>'
+    
+    html += """
+            <a href="/" class="btn">← Voltar para o site</a>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))

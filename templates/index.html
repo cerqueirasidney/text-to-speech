@@ -129,6 +129,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         .btn-secondary {
@@ -334,17 +335,34 @@
         .history h3 {
             color: var(--text-primary);
             margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-limpar-historico {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .btn-limpar-historico:hover {
+            background: #c82333;
         }
 
         .history-item {
-            padding: 10px;
+            padding: 12px;
             background: var(--bg-secondary);
             border-radius: 8px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
             transition: all 0.3s ease;
         }
 
@@ -357,12 +375,36 @@
             flex: 1;
             color: var(--text-primary);
             font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .history-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .history-item-voz {
             color: var(--accent);
             font-size: 0.8em;
             font-weight: 600;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px 8px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+
+        .btn-delete:hover {
+            opacity: 1;
+            background: rgba(220, 53, 69, 0.1);
+            transform: scale(1.1);
         }
 
         @media (max-width: 768px) {
@@ -393,7 +435,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎙️ Texto para Fala</h1>
+            <h1>️ Texto para Fala</h1>
             <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
         </div>
         
@@ -402,7 +444,7 @@
                 <label for="texto">Digite seu texto:</label>
                 <textarea id="texto" name="texto" placeholder="Digite o texto que você quer converter em áudio..." required></textarea>
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" id="limparBtn">🗑️ Limpar</button>
+                    <button type="button" class="btn-secondary" id="limparBtn">️ Limpar</button>
                     <button type="button" class="btn-secondary" id="exemploBtn">📝 Exemplo</button>
                 </div>
             </div>
@@ -414,20 +456,32 @@
                         <optgroup label="Masculinas">
                             <option value="pt-BR-AntonioNeural">Antonio (Maduro, Natural)</option>
                             <option value="pt-BR-DonatoNeural">Donato (Jovem)</option>
+                            <option value="pt-BR-HumbertoNeural">Humberto</option>
+                            <option value="pt-BR-JulioNeural">Julio</option>
+                            <option value="pt-BR-NicolauNeural">Nicolau</option>
                         </optgroup>
                         <optgroup label="Femininas">
                             <option value="pt-BR-FranciscaNeural">Francisca (Natural)</option>
                             <option value="pt-BR-LeilaNeural">Leila (Jovem)</option>
+                            <option value="pt-BR-BrendaNeural">Brenda</option>
+                            <option value="pt-BR-ElzaNeural">Elza</option>
+                            <option value="pt-BR-GiovannaNeural">Giovanna</option>
                         </optgroup>
                     </optgroup>
                     <optgroup label="English (US)">
                         <optgroup label="Male">
                             <option value="en-US-GuyNeural">Guy (Natural)</option>
                             <option value="en-US-DavisNeural">Davis (Young)</option>
+                            <option value="en-US-AndrewNeural">Andrew</option>
+                            <option value="en-US-ChristopherNeural">Christopher</option>
+                            <option value="en-US-EricNeural">Eric</option>
+                            <option value="en-US-RogerNeural">Roger</option>
+                            <option value="en-US-SteffanNeural">Steffan</option>
                         </optgroup>
                         <optgroup label="Female">
                             <option value="en-US-JennyNeural">Jenny (Natural)</option>
                             <option value="en-US-AriaNeural">Aria (Young)</option>
+                            <option value="en-US-MichelleNeural">Michelle</option>
                         </optgroup>
                     </optgroup>
                     <optgroup label="Español (España)">
@@ -479,7 +533,10 @@
         </div>
 
         <div class="history" id="historyContainer" style="display: none;">
-            <h3>📜 Histórico de Áudios</h3>
+            <h3>
+                <span>📜 Histórico de Áudios</span>
+                <button class="btn-limpar-historico" id="limparHistoricoBtn">🗑️ Limpar tudo</button>
+            </h3>
             <div id="historyList"></div>
         </div>
     </div>
@@ -498,7 +555,7 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            themeToggle.textContent = newTheme === 'dark' ? '️' : '🌙';
         });
 
         // Sliders
@@ -543,6 +600,7 @@
         const downloadLink = document.getElementById('downloadLink');
         const historyContainer = document.getElementById('historyContainer');
         const historyList = document.getElementById('historyList');
+        const limparHistoricoBtn = document.getElementById('limparHistoricoBtn');
 
         // Carregar histórico
         let historico = JSON.parse(localStorage.getItem('historico') || '[]');
@@ -580,7 +638,6 @@
                     body: formData
                 });
                 
-                // Verificar se a resposta é JSON válido
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     throw new Error(`Servidor retornou HTTP ${response.status} - Resposta não é JSON`);
@@ -593,7 +650,6 @@
                     downloadLink.href = data.arquivo.replace('/static/', '/download/');
                     audioContainer.classList.add('show');
                     
-                    // Mostrar mensagem de fallback se houver
                     if (data.mensagem) {
                         warning.textContent = 'ℹ️' + data.mensagem;
                         warning.style.background = 'rgba(102, 126, 234, 0.15)';
@@ -602,7 +658,6 @@
                         warning.classList.add('show');
                     }
                     
-                    // Salvar no histórico
                     historico.unshift({
                         texto: data.texto,
                         voz: data.voz,
@@ -623,7 +678,6 @@
             } finally {
                 loading.classList.remove('show');
                 
-                // Iniciar contagem regressiva de 5 segundos
                 tempoRestante = 5;
                 countdown.textContent = tempoRestante;
                 warning.classList.add('show');
@@ -642,6 +696,15 @@
             }
         });
 
+        // Limpar todo o histórico
+        limparHistoricoBtn.addEventListener('click', () => {
+            if (confirm('Deseja limpar TODO o histórico de áudios?')) {
+                historico = [];
+                localStorage.removeItem('historico');
+                atualizarHistorico();
+            }
+        });
+
         function atualizarHistorico() {
             if (historico.length === 0) {
                 historyContainer.style.display = 'none';
@@ -655,16 +718,27 @@
                 const div = document.createElement('div');
                 div.className = 'history-item';
                 div.innerHTML = `
-                    <div class="history-item-text">${item.texto}</div>
-                    <div class="history-item-voz">${item.voz.split('-').pop().replace('Neural', '')}</div>
+                    <div class="history-item-text" title="Clique para ouvir">${item.texto}</div>
+                    <div class="history-item-actions">
+                        <div class="history-item-voz">${item.voz.split('-').pop().replace('Neural', '')}</div>
+                        <button class="btn-delete" onclick="deletarAudio(${index})" title="Deletar este áudio">🗑️</button>
+                    </div>
                 `;
-                div.addEventListener('click', () => {
+                div.querySelector('.history-item-text').addEventListener('click', () => {
                     audioPlayer.src = item.arquivo;
                     audioContainer.classList.add('show');
                     audioContainer.scrollIntoView({ behavior: 'smooth' });
                 });
                 historyList.appendChild(div);
             });
+        }
+
+        function deletarAudio(index) {
+            if (confirm('Deseja remover este áudio do histórico?')) {
+                historico.splice(index, 1);
+                localStorage.setItem('historico', JSON.stringify(historico));
+                atualizarHistorico();
+            }
         }
     </script>
 </body>
