@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Texto para Fala</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .audio-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .audio-container.show {
+            display: block;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Texto para Fala</h1>
+        
+        <form id="ttsForm">
+            <div class="form-group">
+                <label for="texto">Digite seu texto:</label>
+                <textarea id="texto" name="texto" placeholder="Digite o texto que você quer converter em áudio..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="voz">Selecione a voz:</label>
+                <select id="voz" name="voz" required>
+                    <optgroup label="Português (Brasil)">
+                        <optgroup label="Masculinas">
+                            <option value="pt-BR-AntonioNeural">Antonio (Maduro, Natural)</option>
+                            <option value="pt-BR-DonatoNeural">Donato (Jovem)</option>
+                            <option value="pt-BR-FabioNeural">Fabio (Formal)</option>
+                        </optgroup>
+                        <optgroup label="Femininas">
+                            <option value="pt-BR-FranciscaNeural">Francisca (Natural)</option>
+                            <option value="pt-BR-LeilaNeural">Leila (Jovem)</option>
+                            <option value="pt-BR-ValerioNeural">Valerio (Suave)</option>
+                        </optgroup>
+                    </optgroup>
+                    <optgroup label="English (US)">
+                        <optgroup label="Male">
+                            <option value="en-US-GuyNeural">Guy (Natural)</option>
+                            <option value="en-US-DavisNeural">Davis (Young)</option>
+                            <option value="en-US-TonyNeural">Tony (Casual)</option>
+                        </optgroup>
+                        <optgroup label="Female">
+                            <option value="en-US-JennyNeural">Jenny (Natural)</option>
+                            <option value="en-US-AriaNeural">Aria (Young)</option>
+                            <option value="en-US-SaraNeural">Sara (Soft)</option>
+                        </optgroup>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="rate">Velocidade: <span id="rateValue">+0%</span></label>
+                <div class="slider-container">
+                    <span>-50%</span>
+                    <input type="range" id="rate" name="rate" min="-50" max="100" value="0" step="5">
+                    <span>+100%</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="pitch">Tom: <span id="pitchValue">+0Hz</span></label>
+                <div class="slider-container">
+                    <span>-50Hz</span>
+                    <input type="range" id="pitch" name="pitch" min="-50" max="50" value="0" step="5">
+                    <span>+50Hz</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">🎵 Gerar Áudio</button>
+            
+            <div class="loading" id="loading">Gerando áudio... Por favor, aguarde.</div>
+            <div class="error" id="error"></div>
+        </form>
+
+        <div class="audio-container" id="audioContainer">
+            <h3>🎧 Seu áudio está pronto!</h3>
+            <audio id="audioPlayer" controls></audio>
+            <a href="#" id="downloadLink" class="download-btn">⬇️ Baixar MP3</a>
+        </div>
+    </div>
+
+    <script>
+        const rateSlider = document.getElementById('rate');
+        const rateValue = document.getElementById('rateValue');
+        const pitchSlider = document.getElementById('pitch');
+        const pitchValue = document.getElementById('pitchValue');
+
+        rateSlider.addEventListener('input', function() {
+            const value = this.value;
+            rateValue.textContent = (value >= 0 ? '+' : '') + value + '%';
+        });
+
+        pitchSlider.addEventListener('input', function() {
+            const value = this.value;
+            pitchValue.textContent = (value >= 0 ? '+' : '') + value + 'Hz';
+        });
+
+        const form = document.getElementById('ttsForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const audioContainer = document.getElementById('audioContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const downloadLink = document.getElementById('downloadLink');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            error.classList.remove('show');
+            audioContainer.classList.remove('show');
+            
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+            
+            const formData = new FormData(form);
+            const rate = rateSlider.value;
+            const pitch = pitchSlider.value;
+            
+            formData.set('rate', (rate >= 0 ? '+' : '') + rate + '%');
+            formData.set('pitch', (pitch >= 0 ? '+' : '') + pitch + 'Hz');
+            
+            try {
+                const response = await fetch('/gerar_audio', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.sucesso) {
+                    audioPlayer.src = data.arquivo;
+                    downloadLink.href = data.arquivo.replace('/static/', '/download/');
+                    audioContainer.classList.add('show');
+                } else {
+                    error.textContent = 'Erro: ' + data.erro;
+                    error.classList.add('show');
+                }
+            } catch (err) {
+                error.textContent = 'Erro ao gerar áudio: ' + err.message;
+                error.classList.add('show');
+            } finally {
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

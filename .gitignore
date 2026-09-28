@@ -1,0 +1,8 @@
+﻿.venv/
+venv/
+__pycache__/
+*.py[cod]
+static/*.mp3
+.vscode/
+.DS_Store
+Thumbs.db
