@@ -17,11 +17,13 @@
         :root {
             --bg-primary: #f8f9fa;
             --bg-secondary: #ffffff;
-            --text-primary: #333333;
-            --text-secondary: #666666;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #6c757d;
             --accent: #667eea;
             --accent-hover: #764ba2;
-            --border: #e0e0e0;
+            --border: #dee2e6;
             --success: #28a745;
             --error: #dc3545;
             --warning: #ffc107;
@@ -29,14 +31,19 @@
         }
 
         [data-theme="dark"] {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --text-primary: #eaeaea;
-            --text-secondary: #a0a0a0;
-            --accent: #667eea;
-            --accent-hover: #764ba2;
-            --border: #2a2a4e;
-            --shadow: rgba(0, 0, 0, 0.3);
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent: #818cf8;
+            --accent-hover: #a78bfa;
+            --border: #334155;
+            --success: #4ade80;
+            --error: #f87171;
+            --warning: #fbbf24;
+            --shadow: rgba(0, 0, 0, 0.4);
         }
 
         body {
@@ -120,6 +127,10 @@
             transition: all 0.3s ease;
         }
 
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
         textarea:focus {
             outline: none;
             border-color: var(--accent);
@@ -134,9 +145,9 @@
 
         .btn-secondary {
             padding: 10px 20px;
-            background: var(--border);
+            background: var(--bg-tertiary);
             color: var(--text-primary);
-            border: none;
+            border: 1px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
@@ -146,6 +157,7 @@
         .btn-secondary:hover {
             background: var(--accent);
             color: white;
+            border-color: var(--accent);
         }
 
         select {
@@ -165,17 +177,29 @@
             border-color: var(--accent);
         }
 
+        select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
         .slider-container {
             display: flex;
             align-items: center;
             gap: 15px;
         }
 
+        .slider-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95em;
+            min-width: 50px;
+        }
+
         input[type="range"] {
             flex: 1;
             height: 8px;
             border-radius: 5px;
-            background: var(--border);
+            background: var(--bg-tertiary);
             outline: none;
             -webkit-appearance: none;
         }
@@ -183,12 +207,14 @@
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: var(--accent);
             cursor: pointer;
             transition: all 0.3s ease;
+            border: 2px solid var(--bg-secondary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
         input[type="range"]::-webkit-slider-thumb:hover {
@@ -196,10 +222,20 @@
             transform: scale(1.2);
         }
 
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid var(--bg-secondary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
         .slider-value {
             min-width: 60px;
             text-align: center;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--accent);
             font-size: 1.1em;
         }
@@ -235,7 +271,7 @@
         .audio-container {
             margin-top: 30px;
             padding: 20px;
-            background: var(--bg-primary);
+            background: var(--bg-tertiary);
             border-radius: 10px;
             display: none;
         }
@@ -243,6 +279,11 @@
         .audio-container.show {
             display: block;
             animation: slideDown 0.3s ease;
+        }
+
+        .audio-container h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
         }
 
         @keyframes slideDown {
@@ -291,13 +332,14 @@
         }
 
         .error {
-            background: rgba(220, 53, 69, 0.1);
+            background: rgba(220, 53, 69, 0.15);
             color: var(--error);
             padding: 15px;
             border-radius: 10px;
             margin-top: 15px;
             display: none;
             border-left: 4px solid var(--error);
+            font-weight: 500;
         }
 
         .error.show {
@@ -307,12 +349,13 @@
 
         .warning {
             background: rgba(255, 193, 7, 0.15);
-            color: #856404;
+            color: var(--warning);
             padding: 15px;
             border-radius: 10px;
             margin-top: 15px;
             display: none;
             border-left: 4px solid var(--warning);
+            font-weight: 500;
         }
 
         .warning.show {
@@ -328,7 +371,7 @@
         .history {
             margin-top: 30px;
             padding: 20px;
-            background: var(--bg-primary);
+            background: var(--bg-tertiary);
             border-radius: 10px;
         }
 
@@ -349,10 +392,12 @@
             cursor: pointer;
             font-size: 0.8em;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .btn-limpar-historico:hover {
             background: #c82333;
+            transform: translateY(-1px);
         }
 
         .history-item {
@@ -364,6 +409,7 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s ease;
+            border: 1px solid var(--border);
         }
 
         .history-item:hover {
@@ -386,7 +432,7 @@
 
         .history-item-voz {
             color: var(--accent);
-            font-size: 0.8em;
+            font-size: 0.85em;
             font-weight: 600;
         }
 
@@ -398,12 +444,12 @@
             padding: 5px 8px;
             border-radius: 5px;
             transition: all 0.3s ease;
-            opacity: 0.6;
+            opacity: 0.7;
         }
 
         .btn-delete:hover {
             opacity: 1;
-            background: rgba(220, 53, 69, 0.1);
+            background: rgba(220, 53, 69, 0.15);
             transform: scale(1.1);
         }
 
@@ -424,6 +470,11 @@
             .slider-container {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 8px;
+            }
+
+            .slider-label {
+                text-align: center;
             }
 
             .button-group {
@@ -452,7 +503,7 @@
             <div class="form-group">
                 <label for="voz">Selecione a voz:</label>
                 <select id="voz" name="voz" required>
-                    <optgroup label="🇧🇷 Português (Brasil)">
+                    <optgroup label="🇧 Português (Brasil)">
                         <optgroup label="Masculinas">
                             <option value="pt-BR-AntonioNeural">Antonio (Maduro, Natural)</option>
                         </optgroup>
@@ -460,7 +511,7 @@
                             <option value="pt-BR-FranciscaNeural">Francisca (Natural)</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇺🇸 English (US)">
+                    <optgroup label="🇸 English (US)">
                         <optgroup label="Male">
                             <option value="en-US-GuyNeural">Guy (Natural)</option>
                             <option value="en-US-AndrewNeural">Andrew</option>
@@ -474,15 +525,15 @@
                             <option value="en-US-MichelleNeural">Michelle</option>
                         </optgroup>
                     </optgroup>
-                    <optgroup label="🇪🇸 Español (España)">
+                    <optgroup label="🇸 Español (España)">
                         <option value="es-ES-AlvaroNeural">Alvaro (Masculino)</option>
                         <option value="es-ES-ElviraNeural">Elvira (Feminino)</option>
                     </optgroup>
-                    <optgroup label="🇷 Français (France)">
+                    <optgroup label="🇫 Français (France)">
                         <option value="fr-FR-HenriNeural">Henri (Masculino)</option>
                         <option value="fr-FR-DeniseNeural">Denise (Feminino)</option>
                     </optgroup>
-                    <optgroup label="🇩 Deutsch (Germany)">
+                    <optgroup label="🇩🇪 Deutsch (Germany)">
                         <option value="de-DE-ConradNeural">Conrad (Masculino)</option>
                         <option value="de-DE-KatjaNeural">Katja (Feminino)</option>
                     </optgroup>
@@ -490,34 +541,34 @@
             </div>
 
             <div class="form-group">
-                <label for="rate">Velocidade: <span id="rateValue">+0%</span></label>
+                <label for="rate">Velocidade: <span id="rateValue" class="slider-value">+0%</span></label>
                 <div class="slider-container">
-                    <span>-50%</span>
+                    <span class="slider-label">-50%</span>
                     <input type="range" id="rate" name="rate" min="-50" max="100" value="0" step="5">
-                    <span>+100%</span>
+                    <span class="slider-label">+100%</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="pitch">Tom: <span id="pitchValue">+0Hz</span></label>
+                <label for="pitch">Tom: <span id="pitchValue" class="slider-value">+0Hz</span></label>
                 <div class="slider-container">
-                    <span>-50Hz</span>
+                    <span class="slider-label">-50Hz</span>
                     <input type="range" id="pitch" name="pitch" min="-50" max="50" value="0" step="5">
-                    <span>+50Hz</span>
+                    <span class="slider-label">+50Hz</span>
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn"> Gerar Áudio</button>
+            <button type="submit" id="submitBtn">🎵 Gerar Áudio</button>
             
             <div class="loading" id="loading">Gerando áudio... Por favor, aguarde.</div>
             <div class="warning" id="warning">
-                ⏳ Aguarde <span class="countdown" id="countdown">5</span> segundos para gerar o próximo áudio.
+                 Aguarde <span class="countdown" id="countdown">5</span> segundos para gerar o próximo áudio.
             </div>
             <div class="error" id="error"></div>
         </form>
 
         <div class="audio-container" id="audioContainer">
-            <h3>🎧 Seu áudio está pronto!</h3>
+            <h3> Seu áudio está pronto!</h3>
             <audio id="audioPlayer" controls></audio>
             <a href="#" id="downloadLink" class="download-btn">⬇️ Baixar MP3</a>
         </div>
@@ -641,9 +692,9 @@
                     audioContainer.classList.add('show');
                     
                     if (data.mensagem) {
-                        warning.textContent = 'ℹ️' + data.mensagem;
-                        warning.style.background = 'rgba(102, 126, 234, 0.15)';
-                        warning.style.color = '#667eea';
+                        warning.textContent = 'ℹ️ ' + data.mensagem;
+                        warning.style.background = 'rgba(129, 140, 248, 0.15)';
+                        warning.style.color = 'var(--accent)';
                         warning.style.borderLeft = '4px solid var(--accent)';
                         warning.classList.add('show');
                     }
@@ -670,11 +721,16 @@
                 
                 tempoRestante = 5;
                 countdown.textContent = tempoRestante;
+                warning.textContent = '⏳ Aguarde ' + tempoRestante + ' segundos para gerar o próximo áudio.';
+                warning.style.background = 'rgba(251, 191, 36, 0.15)';
+                warning.style.color = 'var(--warning)';
+                warning.style.borderLeft = '4px solid var(--warning)';
                 warning.classList.add('show');
                 
                 const intervalo = setInterval(() => {
                     tempoRestante--;
                     countdown.textContent = tempoRestante;
+                    warning.textContent = '⏳ Aguarde ' + tempoRestante + ' segundos para gerar o próximo áudio.';
                     
                     if (tempoRestante <= 0) {
                         clearInterval(intervalo);
@@ -711,7 +767,7 @@
                     <div class="history-item-text" title="Clique para ouvir">${item.texto}</div>
                     <div class="history-item-actions">
                         <div class="history-item-voz">${item.voz.split('-').pop().replace('Neural', '')}</div>
-                        <button class="btn-delete" onclick="deletarAudio(${index})" title="Deletar este áudio">️</button>
+                        <button class="btn-delete" onclick="deletarAudio(${index})" title="Deletar este áudio">🗑️</button>
                     </div>
                 `;
                 div.querySelector('.history-item-text').addEventListener('click', () => {
